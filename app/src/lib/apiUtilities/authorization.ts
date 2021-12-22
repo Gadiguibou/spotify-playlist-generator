@@ -6,8 +6,6 @@ const clientId = import.meta.env.SPOTIFY_CLIENT_ID as string;
 
 export async function spotifyLogin(scopes: string[]): Promise<void> {
     if (browser) {
-        const requestUrl = new URL(authorizationApiUrl + "/authorize");
-
         const state = generateRandomString(
             32,
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -32,11 +30,13 @@ export async function spotifyLogin(scopes: string[]): Promise<void> {
             code_challenge: codeChallenge,
         };
 
+        const requestUrl = new URL(authorizationApiUrl + "/authorize");
+
         Object.entries(queryParams).forEach(([key, value]) =>
             requestUrl.searchParams.append(key, value)
         );
 
-        window.location.assign(requestUrl.toString());
+        window.location.assign(requestUrl.href);
     }
 }
 
@@ -93,7 +93,7 @@ export async function refreshAccessToken(): Promise<void> {
             refresh_token: refreshToken,
             client_id: clientId,
         });
-    
+
         return fetch(requestUrl, {
             method: "POST",
             headers: headers,
