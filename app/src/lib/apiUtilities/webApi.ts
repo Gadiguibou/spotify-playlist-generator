@@ -11,19 +11,19 @@ type SpotifyApiListResponse<T> = {
 };
 
 type SpotifyApiTrackResponse = {
-    album: object;
-    artists: object[];
+    album: any;
+    artists: any[];
     available_markets: string[];
     disc_number: number;
     duration_ms: number;
     explicit: boolean;
-    external_ids: object;
-    external_urls: object;
+    external_ids: any;
+    external_urls: any;
     href: string;
     id: string;
     is_playable: boolean;
-    linked_from: object;
-    restricitions: object;
+    linked_from: any;
+    restricitions: any;
     name: string;
     popularity: number;
     preview_url: string;
@@ -37,27 +37,27 @@ type SpotifyApiAlbumResponse = {
     album_type: string;
     total_tracks: number;
     available_markets: string[];
-    external_urls: object;
+    external_urls: any;
     href: string;
     id: string;
-    images: object[];
+    images: any[];
     name: string;
     release_date: string;
     release_date_precision: string;
-    restrictions: object;
+    restrictions: any;
     type: string;
     uri: string;
-    artists: object[];
-    tracks: object[];
+    artists: any[];
+    tracks: any[];
 };
 
 type SpotifyApiArtistResponse = {
-    external_urls: object;
-    followers: object;
+    external_urls: any;
+    followers: any;
     genres: string[];
     href: string;
     id: string;
-    images: object[];
+    images: any[];
     name: string;
     popularity: number;
     type: string;
@@ -70,10 +70,10 @@ type SpotifyApiShowResponse = {
     description: string;
     html_description: string;
     explicit: boolean;
-    external_urls: object;
+    external_urls: any;
     href: string;
     id: string;
-    images: object[];
+    images: any[];
     is_externally_hosted: boolean;
     languages: string[];
     media_type: string;
@@ -81,7 +81,7 @@ type SpotifyApiShowResponse = {
     publisher: string;
     type: string;
     uri: string;
-    episodes: object[];
+    episodes: any[];
 };
 
 type SpotifyApiEpisodeResponse = {
@@ -90,36 +90,36 @@ type SpotifyApiEpisodeResponse = {
     html_description: string;
     duration_ms: number;
     explicit: boolean;
-    external_urls: object;
+    external_urls: any;
     href: string;
     id: string;
-    images: object[];
+    images: any[];
     is_externally_hosted: boolean;
     is_playable: boolean;
     languages: string[];
     name: string;
     release_date: string;
     release_date_precision: string;
-    resume_point: object;
+    resume_point: any;
     type: string;
     uri: string;
-    restrictions: object;
-    show: object;
+    restrictions: any;
+    show: any;
 };
 
 type SpotifyApiPlaylistResponse = {
     collaborative: boolean;
     description: string | null;
-    external_urls: object;
-    followers: object;
+    external_urls: any;
+    followers: any;
     href: string;
     id: string;
-    images: object[];
+    images: any[];
     name: string;
-    owner: object;
+    owner: any;
     public: boolean;
     snapshot_id: string;
-    tracks: object;
+    tracks: any;
     type: string;
     uri: string;
 };
