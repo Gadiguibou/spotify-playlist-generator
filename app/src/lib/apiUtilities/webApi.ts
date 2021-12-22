@@ -212,3 +212,42 @@ export async function searchPlaylists(
         .then((response) => response.json())
         .then((data) => data.playlists.items);
 }
+
+export async function createPlaylist(
+    accessToken: string,
+    playlist: {
+        tracks: SpotifyApiTrackResponse[];
+        name: string;
+        description: string;
+        public: boolean;
+        collaborative: boolean;
+    }
+): Promise<SpotifyApiPlaylistResponse> {
+    const user = await fetch(apiUrl + "/me", {
+        method: "GET",
+        headers: generateCommonHeaders(accessToken),
+    }).then((response) => response.json());
+
+    const createdPlaylist = await fetch(apiUrl + `/users/${user.id}/playlists`, {
+        method: "POST",
+        headers: generateCommonHeaders(accessToken),
+        body: JSON.stringify({
+            name: playlist.name,
+            description: playlist.description,
+            public: playlist.public,
+            collaborative: playlist.collaborative,
+        }),
+    }).then((response) => response.json());
+
+    for (let i = 0; i < playlist.tracks.length; i += 100) {
+        const uris = playlist.tracks.slice(i * 100, (i + 1) * 100).map((track) => track.uri);
+        await fetch(apiUrl + `/playlists/${createdPlaylist.id}/tracks`, {
+            method: "POST",
+            headers: generateCommonHeaders(accessToken),
+            body: JSON.stringify({
+                uris: uris,
+            }),
+        }).then((response) => response.json());
+    }
+    return createdPlaylist;
+}
