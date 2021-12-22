@@ -1,9 +1,7 @@
 import { browser } from "$app/env";
 
 const authorizationApiUrl = "https://accounts.spotify.com";
-const baseUrl = "http://localhost:3000";
-const clientId = "9d8dc6b0adb74d73adac3def51ed9de6";
-// const clientSecret = "16378319d7594c7b9a5df7a189ba8346";
+const baseUrl = import.meta.env.BASE_URL;
 
 export async function spotifyLogin(scopes: string[]): Promise<void> {
     if (browser) {

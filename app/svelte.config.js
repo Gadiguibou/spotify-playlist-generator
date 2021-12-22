@@ -8,6 +8,11 @@ const config = {
 	preprocess: preprocess(),
 
 	kit: {
+        vite: {
+            base: import.meta.env.PROD
+                ? "https://playlist-generator.gabriellacroix.com/"
+                : "http://localhost:3000/",
+        },
 		adapter: adapter(),
 
 		// hydrate the <div id="svelte"> element in src/app.html
