@@ -195,3 +195,20 @@ export async function getPlaylistItems(
         []
     );
 }
+
+export async function searchPlaylists(
+    accessToken: string,
+    queryString: string
+): Promise<SpotifyApiPlaylistResponse[]> {
+    const requestUrl = new URL(apiUrl + "/search");
+    requestUrl.searchParams.set("type", "playlist");
+    requestUrl.searchParams.set("q", queryString);
+    requestUrl.searchParams.set("limit", "50");
+    const options = {
+        method: "GET",
+        headers: generateCommonHeaders(accessToken),
+    };
+    return fetch(requestUrl.href, options)
+        .then((response) => response.json())
+        .then((data) => data.playlists.items);
+}
