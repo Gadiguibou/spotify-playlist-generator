@@ -24,7 +24,7 @@ export async function spotifyLogin(scopes: string[]): Promise<void> {
             client_id: clientId,
             response_type: "code",
             redirect_uri: baseUrl + "/callback",
-            scopes: scopes.join(" "),
+            scope: scopes.join(" "),
             state: state,
             code_challenge_method: "S256",
             code_challenge: codeChallenge,
