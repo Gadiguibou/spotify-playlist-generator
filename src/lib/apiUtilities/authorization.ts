@@ -1,8 +1,8 @@
 import { browser } from "$app/env";
 
 const authorizationApiUrl = "https://accounts.spotify.com";
-const baseUrl = import.meta.env.BASE_URL;
-const clientId = import.meta.env.SPOTIFY_CLIENT_ID as string;
+const baseUrl = import.meta.env.VITE_BASE_URL;
+const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID as string;
 
 export async function spotifyLogin(scopes: string[]): Promise<void> {
     if (browser) {
