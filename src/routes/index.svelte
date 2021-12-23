@@ -53,7 +53,12 @@
     let blacklistedTracks = [];
     $: {
         const shuffledTracks = playlistItems
-            .filter((i) => i.track && !i.track.is_local && !blacklistedTracks.map((t) => t.id).includes(i.track.id))
+            .filter(
+                (i) =>
+                    i.track &&
+                    !i.track.is_local &&
+                    !blacklistedTracks.map((t) => t.id).includes(i.track.id)
+            )
             .map((i) => i.track)
             .sort(() => Math.random() - 0.5);
         let runningDurationTotal = 0;
