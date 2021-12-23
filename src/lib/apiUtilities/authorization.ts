@@ -1,8 +1,35 @@
 import { browser } from "$app/env";
+import { get, writable } from "svelte/store";
 
 const authorizationApiUrl = "https://accounts.spotify.com";
 const baseUrl = import.meta.env.VITE_BASE_URL;
 const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID as string;
+
+function sessionStorageWritable<T>(key: string, initialValue: T) {
+    if (browser) {
+        const store = writable(JSON.parse(sessionStorage.getItem(key)) || initialValue);
+        store.subscribe((value) => {
+            sessionStorage.setItem(key, JSON.stringify(value));
+        });
+
+        return store;
+    }
+}
+
+function localStorageWritable<T>(key: string, initialValue: T) {
+    if (browser) {
+        const store = writable(JSON.parse(localStorage.getItem(key)) || initialValue);
+        store.subscribe((value) => {
+            localStorage.setItem(key, JSON.stringify(value));
+        });
+        return store;
+    }
+}
+
+export const accessTokenStore = localStorageWritable<string | null>("accessToken", null);
+export const refreshTokenStore = localStorageWritable<string | null>("refreshToken", null);
+export const codeVerifierStore = sessionStorageWritable<string | null>("codeVerifier", null);
+export const stateStore = sessionStorageWritable<string | null>("state", null);
 
 export async function spotifyLogin(scopes: string[]): Promise<void> {
     if (browser) {
@@ -10,13 +37,13 @@ export async function spotifyLogin(scopes: string[]): Promise<void> {
             32,
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
         );
-        sessionStorage.setItem("state", state);
+        stateStore.set(state);
 
         const codeVerifier = generateRandomString(
             128,
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-~"
         );
-        sessionStorage.setItem("codeVerifier", codeVerifier);
+        codeVerifierStore.set(codeVerifier);
 
         const codeChallenge = await generateCodeChallenge(codeVerifier).then(base64UrlEncode);
 
@@ -43,7 +70,7 @@ export async function spotifyLogin(scopes: string[]): Promise<void> {
 export async function requestAccessToken(code: string): Promise<void> {
     const headers = generateCommonHeaders();
 
-    const codeVerifier = sessionStorage.getItem("codeVerifier");
+    const codeVerifier = get(codeVerifierStore);
     if (codeVerifier == null) {
         window.location.replace("/error");
         throw new Error("Code verifier not found");
@@ -74,14 +101,14 @@ export async function requestAccessToken(code: string): Promise<void> {
                 window.location.replace("/error");
                 throw new Error("Access token or refresh token not found");
             }
-            localStorage.setItem("accessToken", accessToken);
-            localStorage.setItem("refreshToken", refreshToken);
+            accessTokenStore.set(accessToken);
+            refreshTokenStore.set(refreshToken);
         });
 }
 
 export async function refreshAccessToken(): Promise<void> {
     if (browser) {
-        const refreshToken = localStorage.getItem("refreshToken");
+        const refreshToken = get(refreshTokenStore);
         if (refreshToken == null) {
             window.location.replace("/error");
             throw new Error("Refresh token not found");
@@ -101,9 +128,13 @@ export async function refreshAccessToken(): Promise<void> {
         })
             .then((response) => response.json())
             .then((data) => {
-                localStorage.setItem("accessToken", data.access_token);
+                if (data.access_token) {
+                    accessTokenStore.set(data.access_token);
+                } else {
+                    throw new Error("No access token returned");
+                }
                 if (data.refresh_token) {
-                    localStorage.setItem("refreshToken", data.refresh_token);
+                    refreshTokenStore.set(data.refresh_token);
                 }
             });
     }
@@ -111,7 +142,6 @@ export async function refreshAccessToken(): Promise<void> {
 
 function generateCommonHeaders(): Headers {
     return new Headers({
-        // Authorization: "Basic " + btoa(`${clientId}:${clientSecret}`),
         "Content-Type": "application/x-www-form-urlencoded",
     });
 }
