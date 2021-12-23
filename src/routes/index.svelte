@@ -61,7 +61,6 @@
     <Nav />
     <h1>Generate a playlist</h1>
     <button on:click={() => window.location.replace("/login")}>Re-login with Spotify</button>
-    <button on:click={refreshAccessToken}>Refresh access token</button>
     <div class="flex">
         <div class="container">
             <h2>Search for a playlist</h2>
