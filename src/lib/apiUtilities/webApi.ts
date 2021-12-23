@@ -1,3 +1,5 @@
+import { accessTokenStore, refreshAccessToken, refreshTokenStore } from "./authorization";
+
 const apiUrl = "https://api.spotify.com/v1";
 
 type SpotifyApiListResponse<T> = {
@@ -149,12 +151,52 @@ async function fetchAndReduceSpotifyApiList<A, B>(
     let previousValue = initialValue;
     let next = input;
     do {
-        const response = await fetch(next, init);
+        const request = new Request(next, init);
+        const response = await fetchAndHandleApiErrors(request);
         const data = await response.json();
         previousValue = callbackFn(previousValue, data);
         next = data.next;
     } while (next);
     return previousValue;
+}
+
+async function handleApiErrors(
+    response: Response,
+    originalCallback: () => Promise<Response>
+): Promise<Response> {
+    if (response.ok) {
+        console.log("Response is ok");
+        return Promise.resolve(response);
+    }
+
+    if (response.status === 401) {
+        console.log("Response is 401");
+        await refreshAccessToken();
+        return originalCallback().then((response) => handleApiErrors(response, originalCallback));
+    } else if (response.status === 403) {
+        console.log("Response is 403");
+        accessTokenStore.set(null);
+        refreshTokenStore.set(null);
+        window.location.assign("/login");
+        throw new Error("Access token invalid");
+    } else if (response.status === 429) {
+        console.log("Response is 429");
+        const retryAfterHeader = response.headers.get("Retry-After");
+        if (retryAfterHeader) {
+            const retryAfter = parseInt(retryAfterHeader);
+            return new Promise((resolve) => setTimeout(resolve, retryAfter * 1000)).then(() =>
+                originalCallback()
+            );
+        } else {
+            return new Promise((resolve) => setTimeout(resolve, 1000))
+                .then(() => originalCallback())
+                .then((response) => handleApiErrors(response, originalCallback));
+        }
+    }
+}
+
+async function fetchAndHandleApiErrors(request: Request): Promise<Response> {
+    return fetch(request).then((response) => handleApiErrors(response, () => fetch(request)));
 }
 
 export async function getUsersPlaylists(
@@ -208,7 +250,9 @@ export async function searchPlaylists(
         method: "GET",
         headers: generateCommonHeaders(accessToken),
     };
-    return fetch(requestUrl.href, options)
+    const request = new Request(requestUrl.href, options);
+
+    return fetchAndHandleApiErrors(request)
         .then((response) => response.json())
         .then((data) => data.playlists.items);
 }
@@ -223,12 +267,13 @@ export async function createPlaylist(
         collaborative: boolean;
     }
 ): Promise<SpotifyApiPlaylistResponse> {
-    const user = await fetch(apiUrl + "/me", {
+    const userRequest = new Request(apiUrl + "/me", {
         method: "GET",
         headers: generateCommonHeaders(accessToken),
-    }).then((response) => response.json());
+    });
+    const user = await fetchAndHandleApiErrors(userRequest).then((response) => response.json());
 
-    const createdPlaylist = await fetch(apiUrl + `/users/${user.id}/playlists`, {
+    const createPlaylistRequest = new Request(apiUrl + `/users/${user.id}/playlists`, {
         method: "POST",
         headers: generateCommonHeaders(accessToken),
         body: JSON.stringify({
@@ -237,17 +282,21 @@ export async function createPlaylist(
             public: playlist.public,
             collaborative: playlist.collaborative,
         }),
-    }).then((response) => response.json());
+    });
+    const createdPlaylist = await fetchAndHandleApiErrors(createPlaylistRequest).then((response) =>
+        response.json()
+    );
 
     for (let i = 0; i < playlist.tracks.length; i += 100) {
         const uris = playlist.tracks.slice(i * 100, (i + 1) * 100).map((track) => track.uri);
-        await fetch(apiUrl + `/playlists/${createdPlaylist.id}/tracks`, {
+        const addTracksRequest = new Request(apiUrl + `/playlists/${createdPlaylist.id}/tracks`, {
             method: "POST",
             headers: generateCommonHeaders(accessToken),
             body: JSON.stringify({
                 uris: uris,
             }),
-        }).then((response) => response.json());
+        });
+        await fetchAndHandleApiErrors(addTracksRequest);
     }
     return createdPlaylist;
 }
