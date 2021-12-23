@@ -1,12 +1,13 @@
 <script lang="ts">
-    import { requestAccessToken } from "$lib/apiUtilities/authorization";
+    import { requestAccessToken, stateStore } from "$lib/apiUtilities/authorization";
 
     import { onMount } from "svelte";
+    import { get } from "svelte/store";
 
     onMount(async () => {
         const urlParams = new URLSearchParams(window.location.search);
 
-        if (sessionStorage.getItem("state") !== urlParams.get("state")) {
+        if (get(stateStore) !== urlParams.get("state")) {
             window.location.replace("/error");
             throw new Error("State mismatch");
         }
